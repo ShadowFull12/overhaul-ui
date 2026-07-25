@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [18, 20, 22]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Payload integrity
+        run: node bin/overhaul-ui.mjs verify
+
+      - name: Contrast maths (black on white must be 21:1)
+        shell: bash
+        run: |
+          node bin/overhaul-ui.mjs contrast "#000000" "#FFFFFF" --json > c.json
+          node -e "const r=require('./c.json'); if(r.ratio!==21){console.error('expected 21, got '+r.ratio);process.exit(1);} console.log('ok '+r.ratio+':1');"
+
+      - name: Generators produce output
+        run: |
+          node bin/overhaul-ui.mjs palette "#2C6E49" --neutrals --json > /dev/null
+          node bin/overhaul-ui.mjs scale --ratio=1.333 --fluid --json > /dev/null
+          node bin/overhaul-ui.mjs tokens --brand="#2C6E49" --format=json > /dev/null
+        shell: bash
+
+      - name: Scanners run against the skill's own templates
+        run: |
+          node bin/overhaul-ui.mjs scan skills/overhaul-ui/templates --json > /dev/null || true
+          node bin/overhaul-ui.mjs motion skills/overhaul-ui/templates --json > /dev/null || true
+          node bin/overhaul-ui.mjs a11y skills/overhaul-ui/templates --json > /dev/null || true
+        shell: bash
+
+      - name: Install into a temp project scope
+        run: node bin/overhaul-ui.mjs install --project --target=agents
+
+      - name: Pack
+        run: npm pack --dry-run

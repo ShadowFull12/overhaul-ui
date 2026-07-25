@@ -20,6 +20,15 @@ build/
 .overhaul-ui/
 overhaul-ui-report.*
 design-system/.cache/
+c.json
+
+# project-scope installs of this skill (created by `overhaul-ui install --project`)
+.agents/
+.claude/
+.kiro/
+.cursor/
+.windsurf/
+.opencode/
 
 # editor / os
 .DS_Store
