@@ -1,0 +1,20 @@
+{
+  "name": "overhaul-ui",
+  "owner": {
+    "name": "shadowfull12",
+    "url": "https://github.com/ShadowFull12"
+  },
+  "description": "Frontend design and UI craft for AI coding agents. Anti-slop design direction, typography, colour, layout, motion, interaction states, accessibility and performance, with 28 command workflows and 7 offline analysis scripts.",
+  "version": "1.0.0",
+  "plugins": [
+    {
+      "name": "overhaul-ui",
+      "source": "./",
+      "version": "1.0.0",
+      "description": "Frontend design skill: 28 commands, 17 reference chapters, 8 surface playbooks, 5 templates, 7 zero-dependency analysis scripts. Frontend only.",
+      "category": "design",
+      "tags": ["frontend", "ui", "ux", "design-system", "accessibility", "animation", "typography", "anti-slop"],
+      "defaultEnabled": true
+    }
+  ]
+}
