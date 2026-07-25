@@ -1,0 +1,90 @@
+{
+  "name": "overhaul-ui",
+  "version": "1.0.0",
+  "description": "An installable, multi-file frontend design skill for AI coding agents. Anti-slop design direction, typography, color, layout, motion, states, accessibility and performance craft — with 25 commands, 8 playbooks and 7 offline analysis scripts. Works with Claude Code, Kiro, Cursor, Codex, Copilot, Gemini CLI, Zed, Windsurf, OpenCode, Cline, Roo and Amp.",
+  "keywords": [
+    "agent-skill",
+    "agent-skills",
+    "claude-code",
+    "claude-skill",
+    "kiro",
+    "cursor",
+    "codex",
+    "copilot",
+    "gemini-cli",
+    "opencode",
+    "zed",
+    "windsurf",
+    "cline",
+    "roo-code",
+    "amp",
+    "frontend",
+    "ui",
+    "ux",
+    "design-system",
+    "design-tokens",
+    "anti-slop",
+    "ai-slop",
+    "accessibility",
+    "wcag",
+    "animation",
+    "motion-design",
+    "typography",
+    "color-palette",
+    "tailwind",
+    "react",
+    "skill",
+    "prompt-engineering"
+  ],
+  "homepage": "https://github.com/shadowfull12/overhaul-ui#readme",
+  "bugs": {
+    "url": "https://github.com/shadowfull12/overhaul-ui/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shadowfull12/overhaul-ui.git"
+  },
+  "license": "MIT",
+  "author": "shadowfull12",
+  "type": "module",
+  "bin": {
+    "overhaul-ui": "bin/overhaul-ui.mjs",
+    "ohui": "bin/overhaul-ui.mjs"
+  },
+  "main": "src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./skill": "./skills/overhaul-ui/SKILL.md"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "skills/",
+    "docs/",
+    ".claude-plugin/",
+    "README.md",
+    "CREDITS.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "node bin/overhaul-ui.mjs",
+    "help": "node bin/overhaul-ui.mjs help",
+    "doctor": "node bin/overhaul-ui.mjs doctor",
+    "test": "node --test test/",
+    "lint:skill": "node bin/overhaul-ui.mjs verify",
+    "prepublishOnly": "node bin/overhaul-ui.mjs verify"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "funding": "https://github.com/sponsors/shadowfull12"
+}

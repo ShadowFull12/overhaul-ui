@@ -1,0 +1,257 @@
+#!/usr/bin/env node
+/**
+ * overhaul-ui — palette
+ *
+ * Generates a perceptually even OKLCH ramp from one brand colour, plus an
+ * optional tinted neutral ramp derived from the same hue.
+ *
+ *   node scripts/palette.mjs "#2C6E49"
+ *   node scripts/palette.mjs "#2C6E49" --steps=11 --neutrals --css
+ *   node scripts/palette.mjs "oklch(0.55 0.17 258)" --json
+ *   node scripts/palette.mjs "#2C6E49" --dark        # dark-theme variants too
+ *
+ * Options
+ *   --steps=<n>    accent steps (default 11)
+ *   --neutrals     also emit a 13-step tinted neutral ramp
+ *   --dark         emit the dark-theme semantic block
+ *   --css          CSS custom properties
+ *   --tailwind     Tailwind v4 @theme block
+ *   --json         JSON
+ *
+ * Why OKLCH: equal lightness steps look equal, and hue can change without
+ * lightness swinging. Every HSL-generated ramp has a muddy middle.
+ */
+
+import { parseArgs, c } from './lib/util.mjs';
+import { parseColor, rgbToOklch, oklchToRgb, clampChroma, toHex, fmtOklch, contrastRatio } from './lib/color.mjs';
+
+const args = parseArgs();
+const input = args._[0];
+if (!input) usage();
+
+const steps = clampInt(args.steps, 11, 5, 15);
+const wantNeutrals = !!args.neutrals;
+const wantDark = !!args.dark;
+const format = args.json ? 'json' : args.tailwind ? 'tailwind' : args.css ? 'css' : 'pretty';
+
+let seed;
+try {
+  const rgb = parseColor(input);
+  seed = rgbToOklch(rgb.r, rgb.g, rgb.b);
+} catch (err) {
+  console.error(`${c.red('error')} ${err.message}`);
+  process.exit(2);
+}
+
+/* -------------------------------------------------------------- generation */
+
+/**
+ * Lightness targets, light -> dark.
+ * The slight exponent gives the light end more resolution, which is where
+ * subtle surface distinctions actually live.
+ */
+function lightnessRamp(n) {
+  const lo = 0.225, hi = 0.965;
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1);
+    out.push(hi - (hi - lo) * Math.pow(t, 1.12));
+  }
+  return out.map((v) => Math.round(v * 1000) / 1000);
+}
+
+/** Chroma envelope: low at the extremes, peaking around mid-lightness. */
+function chromaAt(L, peak) {
+  const d = Math.abs(L - 0.58) / 0.58;
+  const falloff = Math.max(0, 1 - Math.pow(d, 1.5));
+  return Math.max(0.012, peak * (0.28 + 0.72 * falloff));
+}
+
+const STEP_NAMES = {
+  11: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950],
+  9:  [100, 200, 300, 400, 500, 600, 700, 800, 900],
+  7:  [100, 200, 300, 500, 700, 800, 900],
+  5:  [100, 300, 500, 700, 900],
+};
+
+function buildAccent() {
+  const Ls = lightnessRamp(steps);
+  const names = STEP_NAMES[steps] || Ls.map((_, i) => (i + 1) * 100);
+  return Ls.map((L, i) => {
+    const target = chromaAt(L, Math.max(seed.C, 0.06));
+    const { C } = clampChroma(L, target, seed.H);
+    const rgb = oklchToRgb(L, C, seed.H);
+    return {
+      name: String(names[i]),
+      L, C, H: seed.H,
+      oklch: fmtOklch(L, C, seed.H),
+      hex: toHex(rgb),
+      onWhite: round(contrastRatio(rgb, { r: 1, g: 1, b: 1 })),
+      onBlack: round(contrastRatio(rgb, { r: 0.06, g: 0.06, b: 0.07 })),
+    };
+  });
+}
+
+/** Neutrals share the brand hue at very low chroma — the "tinted grey" rule. */
+function buildNeutrals() {
+  const spec = [
+    ['0',    0.990, 0.002], ['50',   0.975, 0.004], ['100',  0.945, 0.006],
+    ['200',  0.895, 0.008], ['300',  0.815, 0.010], ['400',  0.685, 0.013],
+    ['500',  0.565, 0.014], ['600',  0.470, 0.014], ['700',  0.385, 0.013],
+    ['800',  0.285, 0.012], ['900',  0.205, 0.011], ['950',  0.155, 0.010],
+    ['1000', 0.115, 0.009],
+  ];
+  return spec.map(([name, L, C]) => {
+    const { C: cc } = clampChroma(L, C, seed.H);
+    const rgb = oklchToRgb(L, cc, seed.H);
+    return {
+      name, L, C: cc, H: seed.H,
+      oklch: fmtOklch(L, cc, seed.H),
+      hex: toHex(rgb),
+      onWhite: round(contrastRatio(rgb, { r: 1, g: 1, b: 1 })),
+      onBlack: round(contrastRatio(rgb, { r: 0.06, g: 0.06, b: 0.07 })),
+    };
+  });
+}
+
+const accent = buildAccent();
+const neutrals = wantNeutrals ? buildNeutrals() : [];
+
+/* ------------------------------------------------------------------ output */
+
+// lightest step that still clears 4.5:1 on white / darkest that clears it on near-black
+const bodyOnWhite = accent.find((s) => s.onWhite >= 4.5) || accent[accent.length - 1];
+const bodyOnDark = [...accent].reverse().find((s) => s.onBlack >= 4.5) || accent[0];
+
+if (format === 'json') {
+  console.log(JSON.stringify({
+    tool: 'overhaul-ui/palette',
+    seed: { input, hex: toHex(parseColor(input)), oklch: fmtOklch(seed.L, seed.C, seed.H) },
+    accent, neutrals,
+    recommended: {
+      accentOnLight: bodyOnWhite.name,
+      accentOnDark: bodyOnDark.name,
+      neutralHue: round(seed.H, 1),
+    },
+  }, null, 2));
+} else if (format === 'css') {
+  console.log(cssOut());
+} else if (format === 'tailwind') {
+  console.log(tailwindOut());
+} else {
+  pretty();
+}
+
+function cssOut() {
+  const l = [];
+  l.push('/* generated by overhaul-ui palette */');
+  l.push(':root {');
+  l.push(`  --seed-accent: ${fmtOklch(seed.L, seed.C, seed.H)};`);
+  if (neutrals.length) {
+    l.push(`  --seed-neutral-hue: ${round(seed.H, 1)};`);
+    l.push('');
+    l.push('  /* neutrals — tinted with the brand hue, never pure grey */');
+    for (const s of neutrals) l.push(`  --n-${s.name}: ${s.oklch};${pad(s)} /* ${s.hex} */`);
+  }
+  l.push('');
+  l.push('  /* accent */');
+  for (const s of accent) l.push(`  --a-${s.name}: ${s.oklch};${pad(s)} /* ${s.hex} */`);
+  l.push('');
+  l.push('  /* semantic — light theme. Components reference these, never the ramps. */');
+  if (neutrals.length) {
+    l.push('  --bg: var(--n-0);');
+    l.push('  --bg-subtle: var(--n-50);');
+    l.push('  --bg-elevated: var(--n-0);');
+    l.push('  --fg: var(--n-950);');
+    l.push('  --fg-muted: var(--n-600);');
+    l.push('  --border: var(--n-200);');
+  }
+  l.push(`  --accent: var(--a-${bodyOnWhite.name});`);
+  l.push(`  --ring: var(--a-${bodyOnWhite.name});`);
+  l.push('}');
+  if (wantDark) {
+    l.push('');
+    l.push('[data-theme="dark"] {');
+    l.push('  color-scheme: dark;');
+    if (neutrals.length) {
+      l.push('  --bg: var(--n-1000);');
+      l.push('  --bg-subtle: var(--n-900);');
+      l.push('  --bg-elevated: var(--n-800);');
+      l.push('  --fg: var(--n-50);');
+      l.push('  --fg-muted: var(--n-400);');
+      l.push('  --border: var(--n-800);');
+    }
+    l.push(`  --accent: var(--a-${bodyOnDark.name});   /* lighter + less chroma on dark */`);
+    l.push(`  --ring: var(--a-${bodyOnDark.name});`);
+    l.push('}');
+  }
+  return l.join('\n');
+}
+
+function tailwindOut() {
+  const l = ['@import "tailwindcss";', '', '@theme {'];
+  for (const s of neutrals) l.push(`  --color-n-${s.name}: ${s.oklch};`);
+  if (neutrals.length) l.push('');
+  for (const s of accent) l.push(`  --color-accent-${s.name}: ${s.oklch};`);
+  l.push('}');
+  return l.join('\n');
+}
+
+function pretty() {
+  const seedHex = toHex(parseColor(input));
+  console.log(`\n${c.bold('overhaul-ui palette')}  ${c.swatch(seedHex)} ${seedHex}  ${c.gray(fmtOklch(seed.L, seed.C, seed.H))}\n`);
+
+  if (neutrals.length) {
+    console.log(c.bold(`  neutrals  ${c.gray(`hue ${round(seed.H, 1)} · tinted, chroma <= 0.014`)}`));
+    for (const s of neutrals) row(`n-${s.name}`, s);
+    console.log();
+  }
+
+  console.log(c.bold('  accent'));
+  for (const s of accent) row(`a-${s.name}`, s);
+
+  console.log(`\n  ${c.cyan('recommended')}`);
+  console.log(`    light theme accent  ${c.bold(`a-${bodyOnWhite.name}`)}  ${c.gray(`${bodyOnWhite.onWhite}:1 on white`)}`);
+  console.log(`    dark theme accent   ${c.bold(`a-${bodyOnDark.name}`)}  ${c.gray(`${bodyOnDark.onBlack}:1 on near-black`)}`);
+  if (!neutrals.length) console.log(c.dim(`\n  Add --neutrals for the tinted neutral ramp (the single biggest de-slopping move).`));
+  console.log(c.dim(`  Add --css or --tailwind to emit tokens.\n`));
+}
+
+function row(label, s) {
+  const w = (v) => (v >= 4.5 ? c.green(String(v).padStart(5)) : v >= 3 ? c.yellow(String(v).padStart(5)) : c.gray(String(v).padStart(5)));
+  console.log(
+    `  ${c.swatch(s.hex)} ${label.padEnd(8)} ${s.hex}  ${c.gray(s.oklch.padEnd(26))}` +
+    ` ${c.gray('wht')}${w(s.onWhite)} ${c.gray('blk')}${w(s.onBlack)}`
+  );
+}
+
+/* ------------------------------------------------------------------ helpers */
+
+function pad(s) {
+  const len = s.oklch.length;
+  return ' '.repeat(Math.max(1, 26 - len));
+}
+function round(n, d = 2) { return Math.round(n * 10 ** d) / 10 ** d; }
+function clampInt(v, dflt, lo, hi) {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.min(hi, Math.max(lo, Math.round(n))) : dflt;
+}
+
+function usage() {
+  console.log(`
+${c.bold('overhaul-ui palette')} — perceptually even OKLCH ramps
+
+  node scripts/palette.mjs "<colour>" [options]
+
+Options
+  --steps=<n>   accent steps: 5, 7, 9 or 11 (default 11)
+  --neutrals    also emit a 13-step tinted neutral ramp from the same hue
+  --dark        include the dark-theme semantic block
+  --css         CSS custom properties
+  --tailwind    Tailwind v4 @theme block
+  --json        JSON
+
+Accepts hex, rgb() and oklch().
+`);
+  process.exit(2);
+}

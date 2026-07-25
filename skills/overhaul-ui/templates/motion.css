@@ -1,0 +1,210 @@
+/* ============================================================================
+   overhaul-ui — motion tokens and primitives
+   Import after tokens.css. Every duration and easing in the project comes
+   from here; nothing inlines "300ms ease-in-out".
+   Rules encoded below: ease-out on enter, exits faster than enters, UI under
+   300ms, never ease-in on an enter, never bounce on standard UI.
+   ========================================================================= */
+
+:root {
+  /* --- easing ------------------------------------------------------------ */
+  /* enters and feedback — strong, immediate */
+  --ease-out:        cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out-soft:   cubic-bezier(0.16, 1, 0.30, 1);
+  /* on-screen movement and morphs */
+  --ease-in-out:     cubic-bezier(0.77, 0, 0.175, 1);
+  /* exits only — acceptable because the user has stopped watching */
+  --ease-in:         cubic-bezier(0.55, 0, 1, 0.45);
+  /* iOS-style sheets and drawers (Ionic's curve) */
+  --ease-drawer:     cubic-bezier(0.32, 0.72, 0, 1);
+  /* emphasised, Material 3 flavour */
+  --ease-emphasized: cubic-bezier(0.20, 0, 0, 1);
+  /* constant motion: marquees, spinners, progress */
+  --ease-linear:     linear;
+  /* CSS-native spring approximation — off-main-thread spring feel */
+  --ease-spring: linear(
+    0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%,
+    0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.007 50.1%, 1.011 57.7%, 1
+  );
+
+  /* --- duration tiers --------------------------------------------------- */
+  --dur-1: 100ms;   /* colour, press feedback */
+  --dur-2: 150ms;   /* hover, tooltips, small popovers */
+  --dur-3: 200ms;   /* dropdowns, menus */
+  --dur-4: 300ms;   /* modals — the ceiling for UI */
+  --dur-5: 400ms;   /* drawers, toasts */
+  --dur-6: 600ms;   /* marketing, explanatory only */
+
+  /* exits run at ~65-70% of their enter */
+  --dur-exit-2: 100ms;
+  --dur-exit-3: 130ms;
+  --dur-exit-4: 200ms;
+  --dur-exit-5: 260ms;
+}
+
+/* ============================================================================
+   PRIMITIVES
+   ========================================================================= */
+
+/* press feedback — apply to every pressable element */
+.press {
+  transition: transform var(--dur-2) var(--ease-out),
+              background-color var(--dur-1) var(--ease-out);
+}
+.press:active { transform: scale(0.97); }
+
+/* hover enhancements only where a real pointer exists */
+@media (hover: hover) and (pointer: fine) {
+  .hover-lift {
+    transition: transform var(--dur-2) var(--ease-out),
+                box-shadow var(--dur-2) var(--ease-out);
+  }
+  .hover-lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+}
+
+/* anchored overlay: scales from its trigger.
+   Set --transform-origin from your positioning library
+   (Base UI / Radix expose it). Modals are the exception — see .modal. */
+.popover {
+  transform-origin: var(--transform-origin, center);
+  transition: opacity var(--dur-3) var(--ease-out),
+              transform var(--dur-3) var(--ease-out),
+              display var(--dur-3) allow-discrete,
+              overlay var(--dur-3) allow-discrete;
+}
+.popover[data-state="closed"],
+.popover[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.96);
+  transition-duration: var(--dur-exit-3);
+}
+@starting-style { .popover[data-state="open"] { opacity: 0; transform: scale(0.96); } }
+
+/* tooltip — instant for subsequent tooltips while one is already open */
+.tooltip {
+  transform-origin: var(--transform-origin, center);
+  transition: opacity var(--dur-2) var(--ease-out),
+              transform var(--dur-2) var(--ease-out);
+}
+.tooltip[data-instant] { transition-duration: 0ms; }
+
+/* modal — NOT origin-aware; it is not anchored to anything */
+.modal {
+  transform-origin: center;
+  transition: opacity var(--dur-4) var(--ease-out),
+              transform var(--dur-4) var(--ease-out),
+              display var(--dur-4) allow-discrete,
+              overlay var(--dur-4) allow-discrete;
+  overscroll-behavior: contain;
+}
+.modal[data-state="closed"] {
+  opacity: 0; transform: scale(0.96);
+  transition-duration: var(--dur-exit-4);
+}
+@starting-style { .modal[data-state="open"] { opacity: 0; transform: scale(0.96); } }
+
+.modal-backdrop {
+  background: var(--bg-overlay);
+  transition: opacity var(--dur-4) var(--ease-out), display var(--dur-4) allow-discrete;
+}
+@starting-style { .modal-backdrop[data-state="open"] { opacity: 0; } }
+
+/* drawer / bottom sheet — percentage translate works at any height */
+.drawer {
+  transition: transform var(--dur-5) var(--ease-drawer);
+  overscroll-behavior: contain;
+}
+.drawer[data-state="closed"] {
+  transform: translateY(100%);
+  transition-duration: var(--dur-exit-5);
+}
+
+/* toast — transitions, not keyframes: toasts are inserted rapidly and
+   keyframes restart from zero on interruption */
+.toast {
+  opacity: 1;
+  translate: 0 0;
+  transition: opacity var(--dur-5) ease, translate var(--dur-5) ease;
+}
+@starting-style { .toast { opacity: 0; translate: 0 100%; } }
+.toast[data-state="closed"] {
+  opacity: 0; translate: 0 100%;
+  transition-duration: var(--dur-exit-4);
+}
+
+/* accordion / disclosure — animate to auto height */
+:root { interpolate-size: allow-keywords; }
+.collapsible { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--dur-3) var(--ease-out); }
+.collapsible[data-state="open"] { grid-template-rows: 1fr; }
+.collapsible > * { overflow: hidden; }
+
+/* stagger — 30-80ms between items, never blocking interaction */
+.stagger > * {
+  animation: fade-up var(--dur-4) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 50ms);
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--bg-subtle) 25%, var(--bg-inset) 37%, var(--bg-subtle) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s var(--ease-linear) infinite;
+  border-radius: var(--radius-sm);
+}
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+
+/* clip-path reveal — GPU friendly, no extra DOM */
+.reveal-x { clip-path: inset(0 100% 0 0); transition: clip-path var(--dur-4) var(--ease-out); }
+.reveal-x[data-shown] { clip-path: inset(0 0 0 0); }
+
+/* ============================================================================
+   SCROLL-DRIVEN — runs off the main thread, no listener needed
+   ========================================================================= */
+.scroll-progress {
+  transform-origin: left center;
+  animation: scale-x linear;
+  animation-timeline: scroll(root block);
+}
+@keyframes scale-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* one or two of these per page, never on above-the-fold content */
+.on-view {
+  animation: fade-up linear both;
+  animation-timeline: view();
+  animation-range: entry 15% cover 40%;
+}
+
+/* ============================================================================
+   VIEW TRANSITIONS
+   ========================================================================= */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) {
+  animation-duration: var(--dur-4);
+  animation-timing-function: var(--ease-out);
+}
+
+/* ============================================================================
+   REDUCED MOTION — reduce and substitute, do not merely delete
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* restore the transitions that aid comprehension, minus the movement */
+  .popover, .tooltip, .modal, .modal-backdrop, .toast, .drawer {
+    transition: opacity var(--dur-2) var(--ease-out) !important;
+    transform: none !important;
+    translate: none !important;
+  }
+  .skeleton { animation: none; }
+  .stagger > * { animation: none; opacity: 1; transform: none; }
+  @view-transition { navigation: none; }
+}

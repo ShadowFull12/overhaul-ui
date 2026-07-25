@@ -1,0 +1,16 @@
+{
+  "name": "overhaul-ui",
+  "displayName": "overhaul-ui",
+  "version": "1.0.0",
+  "description": "Frontend design skill: anti-slop direction, typography, colour, layout, motion, states, accessibility and performance craft, with 28 commands and 7 offline analysis scripts.",
+  "author": {
+    "name": "shadowfull12",
+    "url": "https://github.com/ShadowFull12"
+  },
+  "homepage": "https://github.com/ShadowFull12/overhaul-ui",
+  "repository": "https://github.com/ShadowFull12/overhaul-ui",
+  "license": "MIT",
+  "keywords": ["frontend", "ui", "ux", "design", "design-system", "accessibility", "animation", "anti-slop"],
+  "skills": "./skills/",
+  "defaultEnabled": true
+}

@@ -1,0 +1,340 @@
+{
+  "schemaVersion": "overhaul-ui/slop-rules@1",
+  "note": "Rules consumed by scripts/slop-scan.mjs. `pattern` is a JS regex source string. `ext` limits the rule to file extensions ('*' = any scanned file). A finding is a lead, not a verdict - confirm in the code before acting.",
+  "rules": [
+    {
+      "id": "color-purple-blue-gradient-tw",
+      "category": "colour",
+      "severity": "error",
+      "pattern": "(?:from|via)-(?:violet|purple|indigo|fuchsia)-\\d{2,3}[^\"'`\\n]{0,60}(?:to|via)-(?:blue|indigo|violet|purple|cyan|sky)-\\d{2,3}",
+      "ext": ["*"],
+      "message": "Purple-to-blue gradient - the single most recognisable AI-design signature",
+      "fix": "One flat brand colour. If depth is needed, vary lightness within one hue, or use a large soft radial in a tinted neutral."
+    },
+    {
+      "id": "color-purple-blue-gradient-css",
+      "category": "colour",
+      "severity": "error",
+      "pattern": "(?:linear|radial|conic)-gradient\\([^)]*#(?:6366f1|8b5cf6|a855f7|7c3aed|818cf8|4f46e5|c084fc)[^)]*\\)",
+      "flags": "i",
+      "ext": ["*"],
+      "message": "Default violet/indigo gradient stop - decorative gradient with no semantic meaning",
+      "fix": "Remove, or replace with a single-hue lightness gradient interpolated `in oklch`."
+    },
+    {
+      "id": "color-pure-black-white",
+      "category": "colour",
+      "severity": "error",
+      "pattern": "(?:color|background(?:-color)?|border(?:-color)?|fill|stroke)\\s*:\\s*(?:#(?:000|000000|fff|ffffff)\\b|black\\b|white\\b)",
+      "flags": "i",
+      "ext": [".css", ".scss", ".sass", ".less", ".pcss", ".postcss", ".styl"],
+      "message": "Pure #000 / #fff - no real surface is pure; reads as unconsidered",
+      "fix": "Tint the extremes: oklch(0.16 0.012 <hue>) dark, oklch(0.985 0.004 <hue>) light."
+    },
+    {
+      "id": "color-mid-grey-default",
+      "category": "colour",
+      "severity": "error",
+      "pattern": "#(?:888|888888|999|999999|aaa|aaaaaa|ccc|cccccc)\\b",
+      "flags": "i",
+      "ext": ["*"],
+      "message": "Default mid-grey (#888/#999/#aaa/#ccc) - usually also fails contrast",
+      "fix": "Use the step of a tinted neutral ramp that measures >= 4.5:1. Check with scripts/contrast.mjs."
+    },
+    {
+      "id": "color-tailwind-default-gray",
+      "category": "colour",
+      "severity": "warn",
+      "pattern": "\\b(?:text|bg|border|ring|divide)-gray-(?:400|500)\\b",
+      "ext": ["*"],
+      "message": "Untouched Tailwind gray-400/500 - the default palette is an AI-slop tell and often fails contrast",
+      "fix": "Define a tinted neutral ramp in @theme (v4) or the config (v3), or at minimum switch to slate/stone/zinc deliberately."
+    },
+    {
+      "id": "color-accent-glow-everywhere",
+      "category": "colour",
+      "severity": "warn",
+      "pattern": "shadow-(?:violet|purple|indigo|fuchsia|cyan|blue)-\\d{2,3}\\/\\d{1,2}",
+      "ext": ["*"],
+      "message": "Accent-coloured glow - emphasis everywhere means emphasis nowhere",
+      "fix": "Glow on the single primary action, or nowhere."
+    },
+    {
+      "id": "color-gradient-text",
+      "category": "colour",
+      "severity": "warn",
+      "pattern": "bg-clip-text[^\"'`\\n]{0,80}text-transparent|text-transparent[^\"'`\\n]{0,80}bg-clip-text",
+      "ext": ["*"],
+      "message": "Gradient text - reduces contrast, breaks in dark mode, dates instantly",
+      "fix": "Solid colour. Use size and weight for emphasis instead."
+    },
+    {
+      "id": "motion-transition-all",
+      "category": "motion",
+      "severity": "error",
+      "pattern": "transition\\s*:\\s*all\\b|\\btransition-all\\b",
+      "ext": ["*"],
+      "message": "transition: all animates properties you did not intend, including layout ones",
+      "fix": "Name them: transition: transform 180ms var(--ease-out), opacity 180ms var(--ease-out)"
+    },
+    {
+      "id": "motion-scale-zero",
+      "category": "motion",
+      "severity": "error",
+      "pattern": "\\bscale\\(\\s*0\\s*\\)|\\bscale-0\\b",
+      "ext": ["*"],
+      "message": "Animating from scale(0) - nothing in the real world appears from nothing",
+      "fix": "Start at scale(0.95)-scale(0.98) combined with opacity: 0."
+    },
+    {
+      "id": "motion-ease-in-enter",
+      "category": "motion",
+      "severity": "warn",
+      "pattern": "(?:transition[^;\\n]{0,80}|animation[^;\\n]{0,80})\\bease-in\\b(?!-out)",
+      "ext": ["*"],
+      "message": "ease-in starts slow at the exact moment the user is watching. Never use it on an enter",
+      "fix": "var(--ease-out) = cubic-bezier(0.23, 1, 0.32, 1). ease-in is only defensible on an exit."
+    },
+    {
+      "id": "motion-bounce-easing",
+      "category": "motion",
+      "severity": "error",
+      "pattern": "cubic-bezier\\(\\s*-?[\\d.]+\\s*,\\s*-[\\d.]+|cubic-bezier\\([^)]*,\\s*1\\.[1-9]\\d*\\s*\\)",
+      "ext": ["*"],
+      "message": "Overshoot/bounce easing on UI - adds perceived latency and reads as toy-like",
+      "fix": "Reserve bounce for drag-release and rare playful moments. Standard UI uses ease-out."
+    },
+    {
+      "id": "motion-layout-property",
+      "category": "motion",
+      "severity": "error",
+      "pattern": "transition\\s*:\\s*(?:[^;\\n]*\\s)?(?:height|width|top|left|right|bottom|margin|padding)\\b[^;\\n]*\\d",
+      "ext": ["*"],
+      "message": "Animating a layout property - triggers layout on every frame",
+      "fix": "Animate transform/opacity. For size, use grid-template-rows: 0fr to 1fr, interpolate-size, or FLIP."
+    },
+    {
+      "id": "motion-long-duration",
+      "category": "motion",
+      "severity": "warn",
+      "pattern": "transition(?:-duration)?\\s*:\\s*(?:[^;\\n]*\\s)?(?:[5-9]\\d{2}|[1-9]\\d{3,})ms",
+      "ext": ["*"],
+      "message": "UI transition of 500ms or more - everything feels heavy",
+      "fix": "Tooltip 125-200ms, dropdown 150-250ms, modal 200-300ms. Drawers and marketing motion may exceed this."
+    },
+    {
+      "id": "motion-no-reduced-motion",
+      "category": "motion",
+      "severity": "warn",
+      "kind": "absence",
+      "pattern": "prefers-reduced-motion",
+      "requires": "(?:@keyframes|animation\\s*:|transition\\s*:)",
+      "ext": [".css", ".scss", ".sass", ".less", ".pcss", ".postcss"],
+      "message": "Stylesheet defines animation but never handles prefers-reduced-motion",
+      "fix": "Add a reduce block that substitutes opacity for movement. See templates/motion.css."
+    },
+    {
+      "id": "motion-hover-not-gated",
+      "category": "motion",
+      "severity": "info",
+      "kind": "absence",
+      "pattern": "\\(hover\\s*:\\s*hover\\)",
+      "requires": ":hover\\s*\\{[^}]*transform",
+      "ext": [".css", ".scss", ".sass", ".less", ".pcss", ".postcss"],
+      "message": "Transform-on-hover with no (hover: hover) guard - touch devices fire hover on tap",
+      "fix": "@media (hover: hover) and (pointer: fine) { ... }"
+    },
+    {
+      "id": "a11y-outline-none",
+      "category": "accessibility",
+      "severity": "error",
+      "pattern": "outline\\s*:\\s*(?:none|0)\\b|\\boutline-none\\b",
+      "ext": ["*"],
+      "message": "Focus outline removed - keyboard users cannot see where they are (WCAG 2.4.7)",
+      "fix": "Delete it, or replace with :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }",
+      "suppressIfFilePattern": "focus-visible"
+    },
+    {
+      "id": "a11y-user-scalable-no",
+      "category": "accessibility",
+      "severity": "error",
+      "pattern": "user-scalable\\s*=\\s*no|maximum-scale\\s*=\\s*1(?:\\.0)?\\b",
+      "ext": ["*"],
+      "message": "Zoom disabled - fails WCAG 1.4.4 Resize Text",
+      "fix": "content=\"width=device-width, initial-scale=1, viewport-fit=cover\""
+    },
+    {
+      "id": "a11y-positive-tabindex",
+      "category": "accessibility",
+      "severity": "warn",
+      "pattern": "tabIndex\\s*=\\s*[{\"']?\\s*[1-9]|tabindex\\s*=\\s*[\"']?[1-9]",
+      "ext": ["*"],
+      "message": "Positive tabindex - breaks the natural tab order",
+      "fix": "Use 0 to make focusable, -1 for programmatic focus only. Fix the DOM order instead."
+    },
+    {
+      "id": "a11y-div-onclick",
+      "category": "accessibility",
+      "severity": "warn",
+      "pattern": "<(?:div|span)(?=[^>]*\\bonClick=)(?![^>]*\\brole=)[^>]*>",
+      "ext": [".jsx", ".tsx"],
+      "message": "Clickable div/span with no role - not keyboard operable, not announced as a control",
+      "fix": "Use <button type=\"button\">. If it navigates, use <a href>."
+    },
+    {
+      "id": "a11y-alert-as-feedback",
+      "category": "accessibility",
+      "severity": "warn",
+      "pattern": "(?:^|[^.\\w])alert\\s*\\(",
+      "ext": [".js", ".jsx", ".ts", ".tsx", ".vue", ".svelte", ".astro"],
+      "message": "alert() as user feedback - not a designed state",
+      "fix": "Inline message for anything actionable, toast for transient confirmation."
+    },
+    {
+      "id": "layout-zindex-magic",
+      "category": "layout",
+      "severity": "warn",
+      "pattern": "z-index\\s*:\\s*(?:9{3,}|[1-9]\\d{3,})|\\bz-\\[?9{3,}",
+      "ext": ["*"],
+      "message": "Magic z-index - a bigger number does not escape an ancestor stacking context",
+      "fix": "Tokenise the layers, and use a portal or the popover API for overlays."
+    },
+    {
+      "id": "layout-important",
+      "category": "layout",
+      "severity": "info",
+      "pattern": "!important",
+      "ext": [".css", ".scss", ".sass", ".less", ".pcss", ".postcss"],
+      "message": "!important - usually a specificity problem, not a solution",
+      "fix": "Fix the cascade. Legitimate exceptions: reduced-motion overrides, third-party resets.",
+      "maxPerFile": 3
+    },
+    {
+      "id": "layout-arbitrary-value",
+      "category": "layout",
+      "severity": "info",
+      "pattern": "\\b(?:w|h|p|m|gap|top|left|right|bottom|text|leading)-\\[\\d+(?:\\.\\d+)?px\\]",
+      "ext": ["*"],
+      "message": "Arbitrary pixel value - an orphan outside the spacing/type scale",
+      "fix": "Snap to the nearest scale step, or add the value to the scale.",
+      "maxPerFile": 6
+    },
+    {
+      "id": "layout-100vh-mobile",
+      "category": "layout",
+      "severity": "warn",
+      "pattern": "(?:min-)?height\\s*:\\s*100vh\\b|\\b(?:min-)?h-screen\\b",
+      "ext": ["*"],
+      "message": "100vh is taller than the visible area on mobile - content hides under browser chrome",
+      "fix": "Use 100svh for anything that must fit; 100dvh only when reflow-while-scrolling is acceptable."
+    },
+    {
+      "id": "content-emoji-icon",
+      "category": "content",
+      "severity": "error",
+      "pattern": "[\\u{1F300}-\\u{1FAFF}\\u{2600}-\\u{27BF}]",
+      "flags": "u",
+      "ext": [".jsx", ".tsx", ".vue", ".svelte", ".astro", ".html"],
+      "message": "Emoji in markup - font-dependent, inconsistent per platform, untintable",
+      "fix": "Use a vector icon set (Lucide, Phosphor, Radix Icons, SF Symbols).",
+      "maxPerFile": 4
+    },
+    {
+      "id": "content-lorem",
+      "category": "content",
+      "severity": "error",
+      "pattern": "lorem ipsum|dolor sit amet|John Doe|Jane Doe|\\[Feature Name\\]|Placeholder text",
+      "flags": "i",
+      "ext": ["*"],
+      "message": "Placeholder content in delivered UI - signals unfinished work and hides real layout problems",
+      "fix": "Write real copy. Real content changes the design."
+    },
+    {
+      "id": "content-todo",
+      "category": "content",
+      "severity": "warn",
+      "pattern": "//\\s*(?:TODO|FIXME|HACK|XXX)\\b|\\{/\\*\\s*TODO",
+      "ext": ["*"],
+      "message": "Unfinished marker in delivered code",
+      "fix": "Finish it, or state clearly that it is out of scope.",
+      "maxPerFile": 5
+    },
+    {
+      "id": "copy-slop-phrases",
+      "category": "copy",
+      "severity": "warn",
+      "pattern": "(?:unlock the power|take your [a-z ]{2,20} to the next level|in today's fast-paced|seamlessly integrat|revolutioniz|supercharge your|game-?changing|cutting-?edge|state-of-the-art|elevate your|say goodbye to|effortlessly|next-generation|best-in-class|world-class|the future of [a-z]+ is here|whether you're a)",
+      "flags": "i",
+      "ext": ["*"],
+      "message": "Marketing slop phrase - would be true of any product, so it says nothing",
+      "fix": "State what it does, for whom, and what changes. See reference/copywriting.md section 2."
+    },
+    {
+      "id": "copy-empty-cta",
+      "category": "copy",
+      "severity": "info",
+      "pattern": ">\\s*(?:Get Started|Learn More|Click here|Discover more|Explore now|Read more)\\s*<",
+      "flags": "i",
+      "ext": [".jsx", ".tsx", ".vue", ".svelte", ".astro", ".html"],
+      "message": "Generic CTA - carries no information about what happens next",
+      "fix": "Verb + object, unique on the page: \"Start a free project\", \"See the 2-minute demo\"."
+    },
+    {
+      "id": "copy-no-data",
+      "category": "copy",
+      "severity": "warn",
+      "pattern": "No data(?: available)?[.\"'`<]|Nothing to (?:show|display)[.\"'`<]|Something went wrong",
+      "flags": "i",
+      "ext": ["*"],
+      "message": "Empty or error state that tells the user nothing",
+      "fix": "Empty: name what belongs here and offer the action. Error: what happened, why, what to do next."
+    },
+    {
+      "id": "state-no-focus-visible",
+      "category": "states",
+      "severity": "warn",
+      "kind": "absence",
+      "pattern": "focus-visible",
+      "requires": ":hover|hover:",
+      "ext": [".css", ".scss", ".sass", ".less", ".pcss", ".postcss"],
+      "message": "Stylesheet defines hover states but no focus-visible state",
+      "fix": "Every hover affordance needs a focus equivalent - keyboard users get nothing otherwise."
+    },
+    {
+      "id": "perf-img-no-dimensions",
+      "category": "performance",
+      "severity": "warn",
+      "pattern": "<img(?![^>]*(?:width=|aspect-ratio|className=\"[^\"]*aspect-))[^>]*src=",
+      "ext": [".jsx", ".tsx", ".vue", ".svelte", ".astro", ".html"],
+      "message": "<img> without dimensions or aspect-ratio - a guaranteed layout shift",
+      "fix": "Add width/height attributes or aspect-ratio. Use the framework image component where available."
+    },
+    {
+      "id": "perf-permanent-will-change",
+      "category": "performance",
+      "severity": "warn",
+      "pattern": "will-change\\s*:\\s*(?!auto)",
+      "ext": ["*"],
+      "message": "will-change wastes GPU memory when left on permanently, and can reduce performance",
+      "fix": "Add before the animation, remove after. Never a static declaration on many elements."
+    },
+    {
+      "id": "perf-motion-shorthand",
+      "category": "performance",
+      "severity": "info",
+      "pattern": "animate\\s*=\\s*\\{\\{\\s*(?:x|y|scale)\\s*:",
+      "ext": [".jsx", ".tsx"],
+      "message": "Motion x/y/scale shorthand is not hardware-accelerated - it runs on the main thread",
+      "fix": "animate={{ transform: \"translateX(100px)\" }} for the GPU path, or use CSS."
+    },
+    {
+      "id": "structure-nested-cards",
+      "category": "layout",
+      "severity": "warn",
+      "pattern": "(?:rounded(?:-\\w+)?\\s+border[^\"'`\\n]{0,120}){3,}",
+      "ext": [".jsx", ".tsx", ".vue", ".svelte", ".astro", ".html"],
+      "message": "Possible card-inside-card-inside-card - three container levels in one class chain",
+      "fix": "Flatten to one container level. Separate with space or a background shift, not a third border."
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+.yarn/
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# build / packaging
+dist/
+build/
+*.tgz
+
+# overhaul-ui generated output
+.overhaul-ui/
+overhaul-ui-report.*
+design-system/.cache/
+
+# editor / os
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*~
+
+# env
+.env
+.env.*
+!.env.example
+
+# test artifacts
+coverage/
+.nyc_output/
+test/tmp/
