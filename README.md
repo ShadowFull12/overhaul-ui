@@ -8,10 +8,13 @@ Your agent can already write correct UI code. This gives it taste, judgment, and
 checks to prove the work holds up.
 
 [![npm version](https://img.shields.io/npm/v/overhaul-ui?style=flat-square&color=2C6E49&label=npm)](https://www.npmjs.com/package/overhaul-ui)
+[![downloads](https://img.shields.io/npm/dm/overhaul-ui?style=flat-square&color=2C6E49)](https://www.npmjs.com/package/overhaul-ui)
 [![license](https://img.shields.io/badge/license-MIT-2C6E49?style=flat-square)](./LICENSE)
 [![node](https://img.shields.io/badge/node-%E2%89%A518-2C6E49?style=flat-square)](https://nodejs.org)
+[![ci](https://img.shields.io/github/actions/workflow/status/ShadowFull12/overhaul-ui/ci.yml?style=flat-square&label=ci)](https://github.com/ShadowFull12/overhaul-ui/actions/workflows/ci.yml)
 [![agent skills](https://img.shields.io/badge/format-Agent%20Skills-1f2937?style=flat-square)](https://agentskills.io/specification)
 [![dependencies](https://img.shields.io/badge/dependencies-0-1f2937?style=flat-square)](./package.json)
+[![install size](https://img.shields.io/badge/unpacked-546%20kB-1f2937?style=flat-square)](https://www.npmjs.com/package/overhaul-ui?activeTab=code)
 
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-supported-1f2937?style=flat-square)](#compatibility)
 [![Cursor](https://img.shields.io/badge/Cursor-supported-1f2937?style=flat-square)](#compatibility)
@@ -23,6 +26,8 @@ checks to prove the work holds up.
 ```bash
 npx overhaul-ui install
 ```
+
+<sub>28 commands · 17 reference chapters · 8 playbooks · 7 analysis scripts · 13 agents · zero dependencies</sub>
 
 [Why](#why) · [Install](#install) · [Use](#use) · [Commands](#the-28-commands) · [CLI](#cli-tools) · [Compatibility](#compatibility) · [Credits](#credits)
 
@@ -113,6 +118,11 @@ bunx overhaul-ui install
 ```bash
 git clone https://github.com/ShadowFull12/overhaul-ui
 cp -r overhaul-ui/skills/overhaul-ui ~/.agents/skills/
+```
+
+**Pin a version** — the skill payload is content, so pinning keeps behaviour stable:
+```bash
+npx overhaul-ui@1.0.0 install
 ```
 
 **Claude Code plugin marketplace**
@@ -387,9 +397,27 @@ Issues and PRs welcome. Useful contributions:
 ```bash
 git clone https://github.com/ShadowFull12/overhaul-ui
 cd overhaul-ui
-node bin/overhaul-ui.mjs verify      # integrity check
+node bin/overhaul-ui.mjs verify      # payload integrity, link resolution, rule compilation
 node bin/overhaul-ui.mjs scan .      # dogfood it
+node bin/overhaul-ui.mjs doctor      # environment and install state
 ```
+
+CI runs `verify`, asserts the contrast maths still returns exactly 21:1 for black on
+white, and exercises every generator and installer on Node 18/20/22 across Linux,
+Windows and macOS.
+
+### Releasing
+
+Publishing goes through [npm trusted publishing](https://docs.npmjs.com/trusted-publishers)
+(GitHub OIDC) — no `NPM_TOKEN` is stored anywhere.
+
+```bash
+npm version patch|minor|major
+git push --follow-tags
+```
+
+The `v*` tag triggers `.github/workflows/release.yml`, which checks the tag matches
+`package.json`, runs `verify`, then publishes.
 
 ---
 
