@@ -25,6 +25,11 @@ c.json
 # local marketing drafts — never committed
 marketing/
 
+# raw source recordings (59MB) — kept locally, not in git.
+# The optimised side-by-side composite in assets/derived/ is what the README uses.
+assets/Cardix_Before_Video.mp4
+assets/Cardix_After_Video.mp4
+
 # project-scope installs of this skill (created by `overhaul-ui install --project`)
 .agents/
 .claude/
