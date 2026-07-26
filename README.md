@@ -2,10 +2,13 @@
 
 # overhaul-ui
 
-**A frontend design skill for AI coding agents.**
+**The design department your AI agent never had.**
 
-Your agent can already write correct UI code. This gives it taste, judgment, and the
-checks to prove the work holds up.
+Not one more design opinion to install — the skill that knows the good ones already
+out there, routes to the right specialist at the right moment, and covers everything
+none of them ship with the same rigor: WCAG 2.2, Core Web Vitals, OKLCH colour math,
+and 35 measured AI-slop detection rules. 28 commands. 17 disciplines. 13 agents. One
+install.
 
 [![npm version](https://img.shields.io/npm/v/overhaul-ui?style=flat-square&color=2C6E49&label=npm)](https://www.npmjs.com/package/overhaul-ui)
 [![downloads](https://img.shields.io/npm/dm/overhaul-ui?style=flat-square&color=2C6E49)](https://www.npmjs.com/package/overhaul-ui)
@@ -29,24 +32,39 @@ npx overhaul-ui install
 
 <sub>28 commands · 17 reference chapters · 8 playbooks · 7 analysis scripts · 13 agents · zero dependencies</sub>
 
-[Why](#why) · [Install](#install) · [Use](#use) · [Commands](#the-28-commands) · [CLI](#cli-tools) · [Compatibility](#compatibility) · [Credits](#credits)
+[Why](#why-one-skill-instead-of-five) · [Install](#install) · [Use](#use) · [Commands](#the-28-commands) · [CLI](#cli-tools) · [Compatibility](#compatibility) · [Credits](#credits)
 
 </div>
 
 ---
 
-## Why
+## Why one skill instead of five
 
-A model predicts the most probable next token. Applied to design, "most probable" means
-the average of everything it has seen: Inter at three sizes, a purple-to-blue gradient,
-three centred feature cards, `transition: all 300ms ease-in-out`, and no empty state.
+The Agent Skills ecosystem already has excellent frontend-design specialists: deep
+animation philosophy, sharp anti-slop taste, searchable colour and font databases,
+ambitious end-to-end design direction. Installing several of them is the right
+instinct — and it creates a new problem. They don't know about each other. Two of
+them will happily give your agent contradictory advice in the same session, and none
+of them ship the offline tooling to verify any of it.
 
-That is not a prompting failure. It is what an underspecified brief produces by default,
-and it is why so much AI-built UI is simultaneously correct and forgettable.
+**overhaul-ui is the layer above that.** It detects what's already installed on your
+machine and routes to the specialist that's actually best at the task in front of it —
+see [Plays well with other skills](#plays-well-with-other-skills). It only steps in
+directly for the parts of frontend work that need rigor rather than taste: WCAG 2.2
+line items, Core Web Vitals budgets, OKLCH colour math, 35 codified slop-detection
+rules, motion anti-pattern linting. One install. One consistent hard floor across
+every agent you use. Nothing to reconcile.
 
-**overhaul-ui supplies the missing layer:** a design direction to commit to, the craft
-rules that separate shipped products from demos, and scripts that measure the things
-you should never eyeball.
+### The problem it starts from
+
+A model predicts the most probable next token. Applied to design, "most probable"
+means the average of everything it has seen: Inter at three sizes, a purple-to-blue
+gradient, three centred feature cards, `transition: all 300ms ease-in-out`, and no
+empty state.
+
+That is not a prompting failure. It is what an underspecified brief produces by
+default, and it is why so much AI-built UI is simultaneously correct and
+forgettable.
 
 <table>
 <tr><th align="left">Without</th><th align="left">With</th></tr>
@@ -252,7 +270,10 @@ npx overhaul-ui commands     # list them with descriptions
 
 ## CLI tools
 
-Seven zero-dependency Node scripts. The agent runs them; so can you. All support `--json`.
+Most design skills are prose and opinion. These seven zero-dependency Node scripts
+*compute* things instead — real OKLCH colour math, real WCAG contrast ratios, real
+pattern matching against 35 codified slop rules. The agent runs them before it tells
+you something is fine; so can you. All support `--json`.
 
 ```bash
 # AI-slop and craft defects — 35 rules across colour, motion, layout, a11y, copy
@@ -307,6 +328,8 @@ by category: colour 7 · motion 6 · accessibility 4 · copy 3 · layout 1
 
 ## Compatibility
 
+Configure your design system once. Every agent you use inherits it.
+
 Installs as a spec-compliant [Agent Skill](https://agentskills.io/specification), so it
 works anywhere the format is read. The default install writes three directories that
 between them cover nearly everything.
@@ -344,8 +367,12 @@ styled-components · Radix · Base UI · shadcn/ui · React Aria · MUI · Manti
 
 ## Plays well with other skills
 
-overhaul-ui is a compilation *and* a router. It carries its own knowledge so it works
-alone, and **defers to specialists when they're installed** rather than duplicating them:
+This is the part most design skills don't do, and it's deliberate: only a tool
+confident in its own lane routes work *away* from itself instead of fighting for it.
+
+overhaul-ui is a compilation *and* a router. It carries its own knowledge for all 17
+disciplines so it works completely standalone, and **detects and defers to specialists
+when they're installed** rather than duplicating or contradicting them:
 
 | Installed | It defers for |
 |---|---|
