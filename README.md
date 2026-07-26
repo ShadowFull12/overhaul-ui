@@ -32,6 +32,8 @@ npx overhaul-ui install
 
 <sub>28 commands · 17 reference chapters · 8 playbooks · 7 analysis scripts · 13 agents · zero dependencies</sub>
 
+**[overhaul-ui.vercel.app →](https://overhaul-ui.vercel.app)** — the site is built with the skill, and audited on-page by the same scripts it ships.
+
 [See it work](#see-it-work) · [Why](#why-one-skill-instead-of-five) · [Install](#install) · [Use](#use) · [Commands](#the-28-commands) · [CLI](#cli-tools) · [Compatibility](#compatibility) · [Credits](#credits)
 
 </div>
@@ -513,6 +515,8 @@ The `v*` tag triggers `.github/workflows/release.yml`, which checks the tag matc
 <div align="center">
 
 **MIT** © [shadowfull12](https://github.com/ShadowFull12)
+
+**[Site](https://overhaul-ui.vercel.app)** · [npm](https://www.npmjs.com/package/overhaul-ui) · [Issues](https://github.com/ShadowFull12/overhaul-ui/issues)
 
 <sub>Frontend only. If it's backend, infra or data, this skill says so and gets out of the way.</sub>
 
