@@ -22,6 +22,9 @@ overhaul-ui-report.*
 design-system/.cache/
 c.json
 
+# local marketing drafts — never committed
+marketing/
+
 # project-scope installs of this skill (created by `overhaul-ui install --project`)
 .agents/
 .claude/
