@@ -234,8 +234,6 @@ Or name a command explicitly: `/overhaul-ui:audit`, `oh audit`, `use overhaul-ui
 
 ## The hard floor
 
-<img src="https://raw.githubusercontent.com/ShadowFull12/overhaul-ui/main/assets/S3_6B.png" alt="Focus ring with consistent offset" width="150" align="right">
-
 Twelve rules that apply to every deliverable. Violating one is a defect, not a style
 preference.
 
@@ -247,6 +245,14 @@ preference.
 | No `ease-in` enters, nothing over 300ms for UI | All four async states, not just the happy path |
 | No layout shift from hover, focus or load | Tinted neutrals — no `#000`/`#fff`/`#888` |
 | Images have dimensions and alt text | No emoji as structural icons |
+
+<div align="center">
+<img src="https://raw.githubusercontent.com/ShadowFull12/overhaul-ui/main/assets/S3_6B.png" alt="An ease-out timing curve: fast at the start, settling at the end" width="300">
+<br><sub><b>Why <code>ease-in</code> is banned on enters.</b> An ease-out curve moves most at the
+start — the instant the user is watching. The same 200&nbsp;ms with <code>ease-in</code>
+<i>feels</i> slower, because nothing happens in the first 60&nbsp;ms.<br>
+The skill ships this as a token: <code>--ease-out: cubic-bezier(0.23, 1, 0.32, 1)</code>.</sub>
+</div>
 
 ---
 
